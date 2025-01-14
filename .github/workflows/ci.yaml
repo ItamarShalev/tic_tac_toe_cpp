@@ -22,3 +22,36 @@ jobs:
             -   name: Analyze with cpplint
                 run: |
                     python -m cpplint $(git ls-files '*.h') $(git ls-files '*.cpp')
+    Build:
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v4.1.1
+
+            -   name: Cache Installations
+                id: cache-cmake-installation
+                uses: actions/cache@v4
+                with:
+                    path: cache-cmake-installation
+                    key: ${{ runner.os }}-cache-cmake-installation
+
+            -   name: Install CMake
+                if: steps.cache-cmake-installation.outputs.cache-hit != 'true'
+                run: |
+                    sudo apt-get install -y cmake
+                    echo "CMake version: $(cmake --version)"
+
+            -   name: Install dependencies
+                if: steps.cache-cmake-installation.outputs.cache-hit != 'true'
+                run: sudo apt-get install -y build-essential
+
+            -   name: Configure CMake project
+                run: |
+                    rm -rf build
+                    mkdir build
+                    cd build
+                    cmake ..
+
+            -   name: Build project
+                run: |
+                    cd build
+                    cmake --build .
